@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Chat</title>
+  <style>
+    :root {
+      --bg: #f9fafb;
+      --card-bg: #fff;
+      --primary: #2563eb;
+      --text: #111827;
+      --border: #e5e7eb;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      padding: 1rem;
+      background: var(--primary);
+      color: #fff;
+      text-align: center;
+    }
+    main {
+      flex: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    #chat {
+      height: calc(100vh - 150px);
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+      padding: 1rem;
+    }
+    .message {
+      margin: 0.5rem 0;
+      max-width: 80%;
+      line-height: 1.4;
+    }
+    .user { text-align: right; }
+    .bot { text-align: left; }
+    #form {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    input, button {
+      flex: 1;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <header><h1>🤖 AI Chat</h1></header>
+  <main>
+    <div id="chat"></div>
+    <form id="form">
+      <input type="text" id="input" placeholder="Ask anything…" autocomplete="off" required />
+      <button type="submit">Send</button>
+    </form>
+  </main>
+
+  <script>
+    const chatEl = document.getElementById('chat');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+
+    // Helper to append a message bubble
+    function addMessage(text, className) {
+      const div = document.createElement('div');
+      div.classList.add('message', className);
+      div.textContent = text;
+      chatEl.appendChild(div);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    // Send user message
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userText = input.value.trim();
+      if (!userText) return;
+      addMessage(userText, 'user');
+      input.value = '';
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userText })
+        });
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        addMessage(data.response, 'bot');
+      } catch (err) {
+        console.error(err);
+        addMessage(`❗️ ${err.message}`, 'bot');
+      }
+    });
+  </script>
+</body>
+</html>
